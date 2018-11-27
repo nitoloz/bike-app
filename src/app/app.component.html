@@ -1,6 +1,8 @@
 <div style="text-align:center">
+  <h1>Welcome to the Rent-a-Bike app</h1>
   <div *ngFor="let bike of bikes | async">
     {{bike.name}}
   </div>
+  <div #gmap style="width:80%; height:600px; margin: 0 auto;"></div>
 </div>
 
