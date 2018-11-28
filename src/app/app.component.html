@@ -1,8 +1,11 @@
 <div style="text-align:center">
-  <h1>Welcome to the Rent-a-Bike app</h1>
-  <div *ngFor="let bike of bikes | async">
-    {{bike.name}}
-  </div>
+  <h1>Hello {{firebaseUser ? firebaseUser.displayName : ''}}!</h1>
+  <button *ngIf="firebaseUser; else loginTemplate" (click)="logout()">Logout</button>
+  <ng-template #loginTemplate>
+    <p>Please login.</p>
+    <button (click)="login()">Login with Google</button>
+  </ng-template>
   <div #gmap style="width:80%; height:600px; margin: 0 auto;"></div>
 </div>
+
 
