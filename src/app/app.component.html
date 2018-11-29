@@ -1,11 +1,24 @@
-<div style="text-align:center">
-  <h1>Hello {{firebaseUser ? firebaseUser.displayName : ''}}!</h1>
-  <button *ngIf="firebaseUser; else loginTemplate" (click)="logout()">Logout</button>
+<nav class="navbar navbar-light bg-light">
+  <a class="navbar-brand" href="#">
+    <img src="../assets/bike_blue.png" width="30" height="30" class="d-inline-block align-top" alt="">
+    BikeApp
+  </a>
+  <span class="ml-auto mr-5">{{firebaseUser ? firebaseUser.displayName : ''}}</span>
+  <button class="btn btn-outline-success my-2 my-sm-0" *ngIf="firebaseUser; else loginTemplate" (click)="logout()">
+    Logout
+  </button>
   <ng-template #loginTemplate>
-    <p>Please login.</p>
-    <button (click)="login()">Login with Google</button>
+    <button class="btn btn-outline-success my-2 my-sm-0" (click)="login()">Login with Google</button>
   </ng-template>
-  <div #gmap style="width:80%; height:600px; margin: 0 auto;"></div>
+</nav>
+
+
+<div style="text-align:center">
+  <!--<button class="btn btn-outline-success my-2 my-sm-0" *ngIf="firebaseUser; else loginTemplate" (click)="logout()">Logout</button>-->
+  <!--<ng-template #loginTemplate>-->
+  <!--<button  class="btn btn-outline-success my-2 my-sm-0" (click)="login()">Login with Google</button>-->
+  <!--</ng-template>-->
+  <div [hidden]="!firebaseUser" #gmap style="width:80%; height:600px; margin: 0 auto;"></div>
 </div>
 
 
