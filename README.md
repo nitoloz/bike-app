@@ -15,6 +15,28 @@ Before start using the application one should login using the google account tha
 ### Server side
 Backend is based on a [Firebase Cloud Firestore](https://firebase.google.com/docs/firestore/) while integration with a frontend part is done using official [Angular library for Firebase](https://github.com/angular/angularfire2/).
 
+Firestore includes 2 collections: `Users` and `Bikes`. 
+
+Bikes collection represents all available bikes, where every object stores name, location and status of the bike. Bike object has randomly generated ID and following strucure:
+``` javascript
+{
+  name: string;
+  location: Geopoint; //includes latitude and logitude
+  rented: boolean;
+}
+```
+
+Users collection reprents all bikes users, where every object stores name (google account display name) and information about the last rent: time, bike id, bike name. User object has following strucure:
+``` javascript
+{
+  name: string;
+  rentStartTime: number;
+  rentedBikeId: string;
+  rentedBikeName: string;
+}
+```
+ 
+
 ## Development server
 ### Prerequisites
 * Install nodejs and npm
