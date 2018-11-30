@@ -1,9 +1,12 @@
 /// <reference types="@types/googlemaps" />
 import {AfterContentInit, Component, OnInit, ViewChild} from '@angular/core';
-import {AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument} from '@angular/fire/firestore';
-import {combineLatest, Observable} from 'rxjs';
+import {AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument, DocumentChangeAction} from '@angular/fire/firestore';
+import {combineLatest} from 'rxjs';
 import {AngularFireAuth} from '@angular/fire/auth';
-import {auth, User} from 'firebase/app';
+import {auth, User as FirebaseUser} from 'firebase/app';
+import MapOptions = google.maps.MapOptions;
+import {User} from './interfaces/user';
+import {Bike} from './interfaces/bike';
 
 const initialLatitude = 50.119485;
 const initialLongitude = 8.639571;
@@ -18,12 +21,14 @@ const rentedBikeIcon = 'bike_grey.png';
 export class AppComponent implements OnInit, AfterContentInit {
   @ViewChild('gmap') gmapElement: any;
   map: google.maps.Map;
-  user: any;
+  user: User;
 
-  firebaseUser: User;
+  firebaseUser: FirebaseUser;
 
-  private bikesCollection: AngularFirestoreCollection<any>;
-  private userDocument: AngularFirestoreDocument<any>;
+  private bikesCollection: AngularFirestoreCollection<Bike>;
+  private userDocument: AngularFirestoreDocument<User>;
+  private bikeMarkers = {};
+  private bikeInfoWindows = {};
 
   constructor(private afStore: AngularFirestore,
               public afAuth: AngularFireAuth) {
@@ -48,7 +53,7 @@ export class AppComponent implements OnInit, AfterContentInit {
   }
 
   ngAfterContentInit() {
-    const mapProperties = {
+    const mapProperties: MapOptions = {
       center: new google.maps.LatLng(initialLatitude, initialLongitude),
       zoom: 15,
       mapTypeId: google.maps.MapTypeId.ROADMAP
@@ -64,59 +69,95 @@ export class AppComponent implements OnInit, AfterContentInit {
     this.afAuth.auth.signOut();
   }
 
-  private rentBike(bike: any) {
+  private displayBikes(bikes: DocumentChangeAction<Bike>[]) {
+    bikes.forEach(bike => {
+      this.attachInfoWindow(bike);
+      this.attachMarker(bike);
+    });
+  }
+
+  private rentBike(bike: DocumentChangeAction<Bike>) {
     if (!this.user.rentedBikeId) {
-      this.afStore.collection<any>('users').doc(this.firebaseUser.email)
-        .set({
+      this.afStore.collection<User>('users').doc(this.firebaseUser.email)
+        .set(<User>{
             rentedBikeId: bike.payload.doc.id,
-            rentedBikeName: bike.payload.doc.data().name
+            rentedBikeName: bike.payload.doc.data().name,
+            rentStartTime: Date.now()
           }, {merge: true}
         );
       this.bikesCollection.doc(bike.payload.doc.id).update({rented: true});
-    } else {
-      alert(`Please return first bike ${this.user.rentedBikeName}!`);
     }
   }
 
-  private returnBike(bike: any) {
+  private returnBike(bike: DocumentChangeAction<Bike>) {
     if (this.user.rentedBikeId === bike.payload.doc.id) {
-      this.afStore.collection<any>('users').doc(this.firebaseUser.email)
-        .set({
+      this.afStore.collection<User>('users').doc(this.firebaseUser.email)
+        .set(<User>{
             rentedBikeId: null,
-            rentedBikeName: null
+            rentedBikeName: null,
+            rentStartTime: null
           }, {merge: true}
         );
       this.bikesCollection.doc(bike.payload.doc.id).update({rented: false});
-    } else {
-      alert(`This is not your bike!`);
     }
   }
 
-  private displayBikes(bikes: any[]) {
-    bikes.forEach(bike => {
-      const bikeData = bike.payload.doc.data();
-      const bikeLocation = new google.maps.LatLng(bikeData.location.latitude, bikeData.location.longitude);
-      const infoWindow = new google.maps.InfoWindow({
-        content: `<div>
-                    <h3>Bike ${bikeData.name}</h3>
-                    <button style="float:right;" id="${bike.payload.doc.id}">
-                      ${bikeData.rented ? 'Return!' : 'Rent!'}
-                    </button>
-                  </div>`
-      });
+  private attachInfoWindow(bike: DocumentChangeAction<Bike>) {
+    const bikeData = bike.payload.doc.data();
 
-      google.maps.event.addListener(infoWindow, 'domready', () => {
-        document.getElementById(bike.payload.doc.id).addEventListener('click', (e) => {
-          if (bike.payload.doc.data().rented) {
-            this.returnBike(bike);
-          } else {
-            this.rentBike(bike);
-          }
-          infoWindow.close();
-        });
-      });
+    if (this.bikeInfoWindows[bike.payload.doc.id]) {
+      this.bikeInfoWindows[bike.payload.doc.id] = null;
+    }
 
-      const marker = new google.maps.Marker({
+    const bikeWindowText = bikeData.rented
+      ? bike.payload.doc.id !== this.user.rentedBikeId
+        ? `<p>Sorry, this bike is already rented</p>`
+        : `<p>Hey! This is your bike!</p>`
+      : `<p>This bike is for rent</p>
+          <p>1. Click on "Rent Bicycle"</p>
+          <p>2. Bicycle lock will unlock automatically</p>
+          <p>3. Adjust saddle height</p>`;
+
+    const buttonElement = bikeData.rented && this.user.rentedBikeId !== bike.payload.doc.id
+      ? `<button class="btn btn-primary" disabled style="float:right;" id="${bike.payload.doc.id}">
+        ${bikeData.rented ? 'Return Bike' : 'Rent Bike'}
+        </button>`
+      : `<button class="btn btn-primary" style="float:right;" id="${bike.payload.doc.id}">
+        ${bikeData.rented ? 'Return Bike' : 'Rent Bike'}
+        </button>`;
+
+    this.bikeInfoWindows[bike.payload.doc.id] = new google.maps.InfoWindow({
+      content: `<div class="mt-2 text-left">
+                    <h5>Bike ${bikeData.name}</h5>
+                    ${bikeWindowText}
+                    ${buttonElement}
+                </div>`
+    });
+
+    google.maps.event.addListener(this.bikeInfoWindows[bike.payload.doc.id], 'domready', () => {
+      document.getElementById(bike.payload.doc.id).addEventListener('click', () => {
+        if (bike.payload.doc.data().rented) {
+          this.returnBike(bike);
+        } else {
+          this.rentBike(bike);
+        }
+        this.bikeInfoWindows[bike.payload.doc.id].close();
+      });
+    });
+  }
+
+  private attachMarker(bike: DocumentChangeAction<Bike>) {
+    const bikeData: Bike = bike.payload.doc.data();
+    const bikeLocation = new google.maps.LatLng(bikeData.location.latitude, bikeData.location.longitude);
+
+    if (this.bikeMarkers[bike.payload.doc.id]) {
+      this.bikeMarkers[bike.payload.doc.id].setPosition(bikeLocation);
+      this.bikeMarkers[bike.payload.doc.id].setIcon({
+        url: `assets/${bikeData.rented ? rentedBikeIcon : availableBikeIcon}`,
+        scaledSize: new google.maps.Size(40, 40)
+      });
+    } else {
+      this.bikeMarkers[bike.payload.doc.id] = new google.maps.Marker({
         position: bikeLocation,
         title: bikeData.name,
         map: this.map,
@@ -125,9 +166,10 @@ export class AppComponent implements OnInit, AfterContentInit {
           scaledSize: new google.maps.Size(40, 40)
         }
       });
-      marker.addListener('click', () => {
-        infoWindow.open(this.map, marker);
+      this.bikeMarkers[bike.payload.doc.id].addListener('click', () => {
+        this.bikeInfoWindows[bike.payload.doc.id].open(this.map, this.bikeMarkers[bike.payload.doc.id]);
       });
-    });
+    }
   }
+
 }
