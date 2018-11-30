@@ -1,5 +1,6 @@
 # BikeApp
 Web application that allows user to find a bike on a map and rent it
+![GitHub Logo](/docs/screenshot-1.PNG)
 
 ## Technical description
 ### Frontend
@@ -7,7 +8,12 @@ Web application is based on Angular version 7.0.0, developed with Typescript and
 
 Map is integrated using the [Google Maps Platform](https://cloud.google.com/maps-platform/). Every bike is represented on a map with either a blue (in case it's available) or greyed (in case it's rented) bike image that is based on [Markers](https://developers.google.com/maps/documentation/javascript/markers).
 
-Every marker on the map is clickable and opens on click window with a short summary about the bike using the [InfoWindow](https://developers.google.com/maps/documentation/javascript/infowindows). Depending on the bike status (rented/available) text in the InfoWindow may vary.
+Every marker on the map is clickable and opens on click window with a short summary about the bike using the [InfoWindow](https://developers.google.com/maps/documentation/javascript/infowindows). Depending on the bike status (rented/available) text in the InfoWindow may vary. User is able to rent only 1 bike per session (session is unlimited).
+
+Before start using the application one should login using the google account that acts as a user identifier (more precisely - gmail). Authorization is provided by means of [Firebase Signin](https://firebase.google.com/docs/auth/web/google-signin).
+
+### Server side
+Backend is based on a [Firebase Cloud Firestore](https://firebase.google.com/docs/firestore/) while integration with a frontend part is done using official [Angular library for Firebase](https://github.com/angular/angularfire2/).
 
 ## Development server
 ### Prerequisites
