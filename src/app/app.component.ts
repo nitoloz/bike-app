@@ -22,7 +22,6 @@ export class AppComponent implements OnInit, AfterContentInit {
   @ViewChild('gmap', {static: true}) gmapElement: any;
   map: google.maps.Map;
   user: UserFirebase;
-
   firebaseUser: FirebaseUser;
 
   private bikesCollection: AngularFirestoreCollection<BikeFirebase>;
@@ -38,8 +37,6 @@ export class AppComponent implements OnInit, AfterContentInit {
     this.afAuth.user.subscribe(firebaseUser => {
       this.firebaseUser = firebaseUser;
       if (firebaseUser) {
-        this.afStore.collection<any>('users').doc(firebaseUser.email)
-          .set({name: firebaseUser.displayName}, {merge: true});
         this.bikesCollection = this.afStore.collection<any>('bikes');
         this.userDocument = this.afStore.doc<any>(`users/${this.firebaseUser.email}`);
 
@@ -61,13 +58,6 @@ export class AppComponent implements OnInit, AfterContentInit {
     this.map = new google.maps.Map(this.gmapElement.nativeElement, mapProperties);
   }
 
-  login() {
-    this.afAuth.auth.signInWithPopup(new auth.GoogleAuthProvider());
-  }
-
-  logout() {
-    this.afAuth.auth.signOut();
-  }
 
   private displayBikes(bikes: DocumentChangeAction<BikeFirebase>[]) {
     bikes.forEach(bike => {
