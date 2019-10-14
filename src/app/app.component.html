@@ -1,14 +1,13 @@
 <app-navbar></app-navbar>
 
-<div style="text-align:center; margin-top: 20px;">
+<div class="map-container">
   <h3 *ngIf="!firebaseUser; else timeCheck">Please login to rent a bike</h3>
   <ng-template #timeCheck>
     <div *ngIf="user&&user.rentedBikeId">
       <h3>You rent a bike "{{user.rentedBikeName}}" since {{user.rentStartTime | date:'medium'}}</h3>
     </div>
-
   </ng-template>
-  <div [hidden]="!firebaseUser" #gmap style="width:80%; height:600px; margin: 0 auto;"></div>
+  <div [hidden]="!firebaseUser" #gmap class="map"></div>
 </div>
 
 
