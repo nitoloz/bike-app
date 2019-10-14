@@ -4,8 +4,8 @@ import {AngularFireAuth} from '@angular/fire/auth';
 import {AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument, DocumentChangeAction} from '@angular/fire/firestore';
 import {auth, User as FirebaseUser} from 'firebase/app';
 import {combineLatest} from 'rxjs';
-import {Bike} from './interfaces/bike';
-import {User} from './interfaces/user';
+import {BikeFirebase} from './interfaces/bike-firebase';
+import {UserFirebase} from './interfaces/user-firebase';
 import MapOptions = google.maps.MapOptions;
 
 const initialLatitude = 50.119485;
@@ -21,12 +21,12 @@ const rentedBikeIcon = 'bike_grey.png';
 export class AppComponent implements OnInit, AfterContentInit {
   @ViewChild('gmap', {static: true}) gmapElement: any;
   map: google.maps.Map;
-  user: User;
+  user: UserFirebase;
 
   firebaseUser: FirebaseUser;
 
-  private bikesCollection: AngularFirestoreCollection<Bike>;
-  private userDocument: AngularFirestoreDocument<User>;
+  private bikesCollection: AngularFirestoreCollection<BikeFirebase>;
+  private userDocument: AngularFirestoreDocument<UserFirebase>;
   private bikeMarkers = {};
   private bikeInfoWindows = {};
 
@@ -69,17 +69,17 @@ export class AppComponent implements OnInit, AfterContentInit {
     this.afAuth.auth.signOut();
   }
 
-  private displayBikes(bikes: DocumentChangeAction<Bike>[]) {
+  private displayBikes(bikes: DocumentChangeAction<BikeFirebase>[]) {
     bikes.forEach(bike => {
       this.attachInfoWindow(bike);
       this.attachMarker(bike);
     });
   }
 
-  private rentBike(bike: DocumentChangeAction<Bike>) {
+  private rentBike(bike: DocumentChangeAction<BikeFirebase>) {
     if (!this.user.rentedBikeId) {
-      this.afStore.collection<User>('users').doc(this.firebaseUser.email)
-        .set(<User>{
+      this.afStore.collection<UserFirebase>('users').doc(this.firebaseUser.email)
+        .set(<UserFirebase>{
             rentedBikeId: bike.payload.doc.id,
             rentedBikeName: bike.payload.doc.data().name,
             rentStartTime: Date.now()
@@ -89,10 +89,10 @@ export class AppComponent implements OnInit, AfterContentInit {
     }
   }
 
-  private returnBike(bike: DocumentChangeAction<Bike>) {
+  private returnBike(bike: DocumentChangeAction<BikeFirebase>) {
     if (this.user.rentedBikeId === bike.payload.doc.id) {
-      this.afStore.collection<User>('users').doc(this.firebaseUser.email)
-        .set(<User>{
+      this.afStore.collection<UserFirebase>('users').doc(this.firebaseUser.email)
+        .set(<UserFirebase>{
             rentedBikeId: null,
             rentedBikeName: null,
             rentStartTime: null
@@ -102,7 +102,7 @@ export class AppComponent implements OnInit, AfterContentInit {
     }
   }
 
-  private attachInfoWindow(bike: DocumentChangeAction<Bike>) {
+  private attachInfoWindow(bike: DocumentChangeAction<BikeFirebase>) {
     const bikeData = bike.payload.doc.data();
 
     if (this.bikeInfoWindows[bike.payload.doc.id]) {
@@ -146,8 +146,8 @@ export class AppComponent implements OnInit, AfterContentInit {
     });
   }
 
-  private attachMarker(bike: DocumentChangeAction<Bike>) {
-    const bikeData: Bike = bike.payload.doc.data();
+  private attachMarker(bike: DocumentChangeAction<BikeFirebase>) {
+    const bikeData: BikeFirebase = bike.payload.doc.data();
     const bikeLocation = new google.maps.LatLng(bikeData.location.latitude, bikeData.location.longitude);
 
     if (this.bikeMarkers[bike.payload.doc.id]) {
