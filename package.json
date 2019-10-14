@@ -6,6 +6,7 @@
     "start": "ng serve",
     "start-fan": "ng serve --host 192.168.5.131 --ssl --port 443",
     "build": "ng build",
+    "deploy": "ng deploy --base-href=/bike-app/",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
@@ -21,6 +22,7 @@
     "@angular/platform-browser": "~8.2.8",
     "@angular/platform-browser-dynamic": "~8.2.8",
     "@angular/router": "~8.2.8",
+    "angular-cli-ghpages": "^0.6.0",
     "firebase": "^7.2.0",
     "rxjs": "~6.4.0",
     "tslib": "^1.10.0",
