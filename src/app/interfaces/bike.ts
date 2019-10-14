@@ -1,6 +1,6 @@
 import {Location} from './location';
 
-export interface BikeFirebase {
+export interface Bike {
   name: string;
   rented: boolean;
   location: Location;

@@ -1,62 +1,36 @@
 /// <reference types="@types/googlemaps" />
-import {AfterContentInit, Component, OnInit, ViewChild} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {AngularFireAuth} from '@angular/fire/auth';
-import {AngularFirestore, AngularFirestoreDocument, DocumentChangeAction} from '@angular/fire/firestore';
-import {User as FirebaseUser} from 'firebase/app';
-import {combineLatest} from 'rxjs';
-import {BikeService} from './bike.service';
-import {BikeFirebase} from './interfaces/bike-firebase';
-import {UserFirebase} from './interfaces/user-firebase';
-import MapOptions = google.maps.MapOptions;
-
-const initialLatitude = 50.119485;
-const initialLongitude = 8.639571;
-
+import {AngularFirestore, AngularFirestoreDocument} from '@angular/fire/firestore';
+import {User} from './interfaces/user';
+import {BikeService} from './services/bike.service';
+import {UserService} from './services/user.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit, AfterContentInit {
-  @ViewChild('gmap', {static: true}) gmapElement: any;
-  map: google.maps.Map;
-  user: UserFirebase;
-  firebaseUser: FirebaseUser;
+export class AppComponent implements OnInit {
 
-  private userDocument: AngularFirestoreDocument<UserFirebase>;
+  private userDocument: AngularFirestoreDocument<User>;
 
   constructor(private afStore: AngularFirestore,
               public afAuth: AngularFireAuth,
-              public bikeService: BikeService) {
+              public userService: UserService) {
   }
 
   ngOnInit() {
     this.afAuth.user.subscribe(firebaseUser => {
-      this.firebaseUser = firebaseUser;
+      this.userService.firebaseUser = firebaseUser;
       if (firebaseUser) {
-        this.bikeService.bikesCollection = this.afStore.collection<any>('bikes');
-        this.userDocument = this.afStore.doc<any>(`users/${this.firebaseUser.email}`);
+        this.userDocument = this.afStore.doc<any>(`users/${firebaseUser.email}`);
 
-        combineLatest(this.userDocument.valueChanges(), this.bikeService.bikesCollection.snapshotChanges())
-          .subscribe(([user, bikes]) => {
-            this.user = user;
-            this.bikeService.displayBikes(bikes);
+        this.userDocument.valueChanges()
+          .subscribe(user => {
+            this.userService.user = user;
           });
       }
     });
   }
-
-  ngAfterContentInit() {
-    const mapProperties: MapOptions = {
-      center: new google.maps.LatLng(initialLatitude, initialLongitude),
-      zoom: 15,
-      mapTypeId: google.maps.MapTypeId.ROADMAP
-    };
-    this.map = new google.maps.Map(this.gmapElement.nativeElement, mapProperties);
-  }
-
-
-
-
 }
