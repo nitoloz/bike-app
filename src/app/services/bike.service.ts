@@ -29,32 +29,28 @@ export class BikeService {
   }
 
   private appendInfoWindow(bike: DocumentChangeAction<Bike>) {
-    const bikeData = bike.payload.doc.data();
+    // const bikeData = bike.payload.doc.data();
 
     if (this.bikeInfoWindows[bike.payload.doc.id]) {
       this.bikeInfoWindows[bike.payload.doc.id] = null;
     }
-
-    const bikeWindowText = bikeData.rented
-      ? bike.payload.doc.id !== this.userService.getRentedBikeId()
-        ? `<p>Sorry, this bike is already rented</p>`
-        : `<p>Hey! This is your bike!</p>`
-      : this.getAvailableBikeInfoText();
-
-    const buttonElement = bikeData.rented && this.userService.getRentedBikeId() !== bike.payload.doc.id
-      ? `<button class="btn btn-primary" disabled style="float:right;" id="${bike.payload.doc.id}">
-        ${bikeData.rented ? 'Return Bike' : 'Rent Bike'}
-        </button>`
-      : `<button class="btn btn-primary" style="float:right;" id="${bike.payload.doc.id}">
-        ${bikeData.rented ? 'Return Bike' : 'Rent Bike'}
-        </button>`;
+    //
+    // const bikeWindowText = bikeData.rented
+    //   ? bike.payload.doc.id !== this.userService.getRentedBikeId()
+    //     ? `<p>Sorry, this bike is already rented</p>`
+    //     : `<p>Hey! This is your bike!</p>`
+    //   : this.getAvailableBikeInfoText();
+    //
+    // const buttonElement = bikeData.rented && this.userService.getRentedBikeId() !== bike.payload.doc.id
+    //   ? `<button class="btn btn-primary" disabled style="float:right;" id="${bike.payload.doc.id}">
+    //     ${bikeData.rented ? 'Return Bike' : 'Rent Bike'}
+    //     </button>`
+    //   : `<button class="btn btn-primary" style="float:right;" id="${bike.payload.doc.id}">
+    //     ${bikeData.rented ? 'Return Bike' : 'Rent Bike'}
+    //     </button>`;
 
     this.bikeInfoWindows[bike.payload.doc.id] = new google.maps.InfoWindow({
-      content: `<div class="mt-2 text-left">
-                    <h5>Bike ${bikeData.name}</h5>
-                    ${bikeWindowText}
-                    ${buttonElement}
-                </div>`
+      content: `<app-bike-info-window [bike]="bike"></app-bike-info-window>`
     });
 
     google.maps.event.addListener(this.bikeInfoWindows[bike.payload.doc.id], 'domready', () => {
@@ -110,10 +106,4 @@ export class BikeService {
     };
   }
 
-  private getAvailableBikeInfoText() {
-    return `<p>This bike is for rent</p>
-          <p>1. Click on "Rent Bicycle"</p>
-          <p>2. Bicycle lock will unlock automatically</p>
-          <p>3. Adjust saddle height</p>`;
-  }
 }

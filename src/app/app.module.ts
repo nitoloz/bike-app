@@ -8,12 +8,14 @@ import {environment} from '../environments/environment';
 import {AppComponent} from './app.component';
 import { NavbarComponent } from './navbar/navbar.component';
 import { MapComponent } from './map/map.component';
+import { BikeInfoWindowComponent } from './bike-info-window/bike-info-window.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     NavbarComponent,
-    MapComponent
+    MapComponent,
+    BikeInfoWindowComponent
   ],
   imports: [
     BrowserModule,

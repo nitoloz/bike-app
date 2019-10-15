@@ -1,0 +1,9 @@
+<div class="mt-2 text-left">
+  <h5>Bike {{bikeData.name}}</h5>
+  {{bikeWindowText}}
+  <button class="btn btn-primary"
+          [disabled]="bikeData.rented && userService.getRentedBikeId() !== bike.payload.doc.id" style="float:right;"
+          id="${bike.payload.doc.id}">
+    {{bikeData.rented ? 'Return Bike' : 'Rent Bike'}}
+  </button>
+</div>
