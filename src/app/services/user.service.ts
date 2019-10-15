@@ -1,4 +1,5 @@
 import {Injectable} from '@angular/core';
+import {AngularFirestore, AngularFirestoreDocument} from '@angular/fire/firestore';
 import {User as FirebaseUser} from 'firebase';
 import {User} from '../interfaces/user';
 
@@ -7,10 +8,22 @@ import {User} from '../interfaces/user';
 })
 export class UserService {
 
-  user: User;
-  firebaseUser: FirebaseUser;
+  private user: User;
+  private firebaseUser: FirebaseUser;
+  private userDocument: AngularFirestoreDocument<User>;
 
-  constructor() {
+  constructor(private afStore: AngularFirestore) {
+  }
+
+  setFirebaseUser(firebaseUser: FirebaseUser) {
+    this.firebaseUser = firebaseUser;
+    if (firebaseUser) {
+      this.userDocument = this.afStore.doc<any>(`users/${this.firebaseUser.email}`);
+      this.userDocument.valueChanges().subscribe(user => this.user = user);
+
+      this.afStore.collection<any>('users').doc(firebaseUser.email)
+        .set({name: firebaseUser.displayName}, {merge: true});
+    }
   }
 
   isLoggedIn() {

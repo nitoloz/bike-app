@@ -1,3 +1,4 @@
+/// <reference types="@types/googlemaps" />
 import {Injectable} from '@angular/core';
 import {AngularFirestore, AngularFirestoreCollection, DocumentChangeAction} from '@angular/fire/firestore';
 import {Bike} from '../interfaces/bike';
@@ -85,7 +86,7 @@ export class BikeService {
       this.bikeMarkers[bike.payload.doc.id] = new google.maps.Marker({
         position: bikeLocation,
         title: bikeData.name,
-        map: map,
+        map,
         icon: {
           url: `assets/${bikeData.rented ? rentedBikeIcon : availableBikeIcon}`,
           scaledSize: new google.maps.Size(40, 40)
@@ -100,11 +101,11 @@ export class BikeService {
   private rentBike(bike: DocumentChangeAction<Bike>) {
     if (!this.userService.getRentedBikeId()) {
       this.afStore.collection<User>('users').doc(this.userService.getUserEmail())
-        .set(<User>{
+        .set({
             rentedBikeId: bike.payload.doc.id,
             rentedBikeName: bike.payload.doc.data().name,
             rentStartTime: Date.now()
-          }, {merge: true}
+          } as User, {merge: true}
         );
       this.bikesCollection.doc(bike.payload.doc.id).update({rented: true});
     }
@@ -113,11 +114,11 @@ export class BikeService {
   private returnBike(bike: DocumentChangeAction<Bike>) {
     if (this.userService.getRentedBikeId() === bike.payload.doc.id) {
       this.afStore.collection<User>('users').doc(this.userService.getUserEmail())
-        .set(<User>{
+        .set({
             rentedBikeId: null,
             rentedBikeName: null,
             rentStartTime: null
-          }, {merge: true}
+          } as User, {merge: true}
         );
       this.bikesCollection.doc(bike.payload.doc.id).update({rented: false});
     }
