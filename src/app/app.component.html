@@ -3,9 +3,9 @@
 <div class="map-container">
   <h3 *ngIf="!userService.isLoggedIn(); else timeCheck">Please login to rent a bike</h3>
   <ng-template #timeCheck>
-    <div *ngIf="userService.hasBikeRented()">
+    <ng-container *ngIf="userService.hasBikeRented()">
       <h3>You rent a bike "{{userService.getRentedBikeName()}}" since {{userService.getRentedBikeStartTime() | date:'medium'}}</h3>
-    </div>
+    </ng-container>
   </ng-template>
   <app-map [hidden]="!userService.isLoggedIn()"></app-map>
 </div>

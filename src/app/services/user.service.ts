@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
-import {AngularFirestore, AngularFirestoreDocument} from '@angular/fire/firestore';
+import {AngularFirestore, AngularFirestoreDocument, DocumentChangeAction} from '@angular/fire/firestore';
 import {User as FirebaseUser} from 'firebase';
+import {Bike} from '../interfaces/bike';
 import {User} from '../interfaces/user';
 
 @Injectable({
@@ -52,6 +53,26 @@ export class UserService {
 
   getRentedBikeStartTime() {
     return this.user && this.user.rentStartTime;
+  }
+
+  unassignBikeFromUser() {
+    this.afStore.collection<User>('users').doc(this.getUserEmail())
+      .set({
+          rentedBikeId: null,
+          rentedBikeName: null,
+          rentStartTime: null
+        } as User, {merge: true}
+      );
+  }
+
+  assignBikeToUser(bike: DocumentChangeAction<Bike>) {
+    this.afStore.collection<User>('users').doc(this.getUserEmail())
+      .set({
+          rentedBikeId: bike.payload.doc.id,
+          rentedBikeName: bike.payload.doc.data().name,
+          rentStartTime: Date.now()
+        } as User, {merge: true}
+      );
   }
 
 }

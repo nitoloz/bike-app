@@ -2,7 +2,6 @@
 import {Injectable} from '@angular/core';
 import {AngularFirestore, AngularFirestoreCollection, DocumentChangeAction} from '@angular/fire/firestore';
 import {Bike} from '../interfaces/bike';
-import {User} from '../interfaces/user';
 import {UserService} from './user.service';
 
 const availableBikeIcon = 'bike_blue.png';
@@ -16,14 +15,15 @@ export class BikeService {
   bikeInfoWindows = {};
   bikesCollection: AngularFirestoreCollection<Bike> = this.afStore.collection<any>('bikes');
 
-  constructor(private afStore: AngularFirestore, private userService: UserService) {
+  constructor(private afStore: AngularFirestore,
+              private userService: UserService) {
   }
 
   displayBikes(map: google.maps.Map) {
     this.bikesCollection.snapshotChanges().subscribe((bikes: DocumentChangeAction<Bike>[]) => {
       bikes.forEach(bike => {
         this.appendInfoWindow(bike);
-        this.attachMarker(map, bike);
+        this.attachBikeMarkerToMap(map, bike);
       });
     });
   }
@@ -39,10 +39,7 @@ export class BikeService {
       ? bike.payload.doc.id !== this.userService.getRentedBikeId()
         ? `<p>Sorry, this bike is already rented</p>`
         : `<p>Hey! This is your bike!</p>`
-      : `<p>This bike is for rent</p>
-          <p>1. Click on "Rent Bicycle"</p>
-          <p>2. Bicycle lock will unlock automatically</p>
-          <p>3. Adjust saddle height</p>`;
+      : this.getAvailableBikeInfoText();
 
     const buttonElement = bikeData.rented && this.userService.getRentedBikeId() !== bike.payload.doc.id
       ? `<button class="btn btn-primary" disabled style="float:right;" id="${bike.payload.doc.id}">
@@ -72,25 +69,19 @@ export class BikeService {
     });
   }
 
-  private attachMarker(map: google.maps.Map, bike: DocumentChangeAction<Bike>) {
+  private attachBikeMarkerToMap(map: google.maps.Map, bike: DocumentChangeAction<Bike>) {
     const bikeData: Bike = bike.payload.doc.data();
     const bikeLocation = new google.maps.LatLng(bikeData.location.latitude, bikeData.location.longitude);
 
     if (this.bikeMarkers[bike.payload.doc.id]) {
       this.bikeMarkers[bike.payload.doc.id].setPosition(bikeLocation);
-      this.bikeMarkers[bike.payload.doc.id].setIcon({
-        url: `assets/${bikeData.rented ? rentedBikeIcon : availableBikeIcon}`,
-        scaledSize: new google.maps.Size(40, 40)
-      });
+      this.bikeMarkers[bike.payload.doc.id].setIcon(this.getBikeIcon(bikeData.rented));
     } else {
       this.bikeMarkers[bike.payload.doc.id] = new google.maps.Marker({
         position: bikeLocation,
         title: bikeData.name,
         map,
-        icon: {
-          url: `assets/${bikeData.rented ? rentedBikeIcon : availableBikeIcon}`,
-          scaledSize: new google.maps.Size(40, 40)
-        }
+        icon: this.getBikeIcon(bikeData.rented)
       });
       this.bikeMarkers[bike.payload.doc.id].addListener('click', () => {
         this.bikeInfoWindows[bike.payload.doc.id].open(map, this.bikeMarkers[bike.payload.doc.id]);
@@ -100,27 +91,29 @@ export class BikeService {
 
   private rentBike(bike: DocumentChangeAction<Bike>) {
     if (!this.userService.getRentedBikeId()) {
-      this.afStore.collection<User>('users').doc(this.userService.getUserEmail())
-        .set({
-            rentedBikeId: bike.payload.doc.id,
-            rentedBikeName: bike.payload.doc.data().name,
-            rentStartTime: Date.now()
-          } as User, {merge: true}
-        );
+      this.userService.assignBikeToUser(bike);
       this.bikesCollection.doc(bike.payload.doc.id).update({rented: true});
     }
   }
 
   private returnBike(bike: DocumentChangeAction<Bike>) {
     if (this.userService.getRentedBikeId() === bike.payload.doc.id) {
-      this.afStore.collection<User>('users').doc(this.userService.getUserEmail())
-        .set({
-            rentedBikeId: null,
-            rentedBikeName: null,
-            rentStartTime: null
-          } as User, {merge: true}
-        );
+      this.userService.unassignBikeFromUser();
       this.bikesCollection.doc(bike.payload.doc.id).update({rented: false});
     }
+  }
+
+  private getBikeIcon(isBikeRented: boolean) {
+    return {
+      url: `assets/${isBikeRented ? rentedBikeIcon : availableBikeIcon}`,
+      scaledSize: new google.maps.Size(40, 40)
+    };
+  }
+
+  private getAvailableBikeInfoText() {
+    return `<p>This bike is for rent</p>
+          <p>1. Click on "Rent Bicycle"</p>
+          <p>2. Bicycle lock will unlock automatically</p>
+          <p>3. Adjust saddle height</p>`;
   }
 }
