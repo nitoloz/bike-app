@@ -17,6 +17,7 @@ import { BikeInfoWindowComponent } from './bike-info-window/bike-info-window.com
     MapComponent,
     BikeInfoWindowComponent
   ],
+  entryComponents:[BikeInfoWindowComponent],
   imports: [
     BrowserModule,
     AngularFireModule.initializeApp(environment.firebase),

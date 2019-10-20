@@ -13,25 +13,12 @@ export class BikeInfoWindowComponent implements OnInit {
   @Input() bike: DocumentChangeAction<Bike>;
 
   bikeData: Bike;
-  bikeWindowText: any;
 
   constructor(public userService: UserService) {
   }
 
   ngOnInit() {
     this.bikeData = this.bike.payload.doc.data();
-
-    this.bikeWindowText = this.bikeData.rented
-      ? this.bike.payload.doc.id !== this.userService.getRentedBikeId()
-        ? `<p>Sorry, this bike is already rented</p>`
-        : `<p>Hey! This is your bike!</p>`
-      : this.getAvailableBikeInfoText();
   }
 
-  private getAvailableBikeInfoText() {
-    return `<p>This bike is for rent</p>
-          <p>1. Click on "Rent Bicycle"</p>
-          <p>2. Bicycle lock will unlock automatically</p>
-          <p>3. Adjust saddle height</p>`;
-  }
 }

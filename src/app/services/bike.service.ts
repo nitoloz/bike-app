@@ -1,8 +1,9 @@
 /// <reference types="@types/googlemaps" />
-import {Injectable} from '@angular/core';
+import {ApplicationRef, ComponentFactoryResolver, Injectable, Injector} from '@angular/core';
 import {AngularFirestore, AngularFirestoreCollection, DocumentChangeAction} from '@angular/fire/firestore';
 import {Bike} from '../interfaces/bike';
 import {UserService} from './user.service';
+import {BikeInfoWindowComponent} from '../bike-info-window/bike-info-window.component';
 
 const availableBikeIcon = 'bike_blue.png';
 const rentedBikeIcon = 'bike_grey.png';
@@ -16,7 +17,10 @@ export class BikeService {
   bikesCollection: AngularFirestoreCollection<Bike> = this.afStore.collection<any>('bikes');
 
   constructor(private afStore: AngularFirestore,
-              private userService: UserService) {
+              private userService: UserService,
+              private injector: Injector,
+              private resolver: ComponentFactoryResolver,
+              private appRef: ApplicationRef) {
   }
 
   displayBikes(map: google.maps.Map) {
@@ -49,8 +53,30 @@ export class BikeService {
     //     ${bikeData.rented ? 'Return Bike' : 'Rent Bike'}
     //     </button>`;
 
+    // if(this.compRef) this.compRef.destroy();
+
+    // creation component, AppInfoWindowComponent should be declared in entryComponents
+    const compFactory = this.resolver.resolveComponentFactory(BikeInfoWindowComponent);
+    const compRef = compFactory.create(this.injector);
+
+    // example of parent-child communication
+    compRef.instance.bike = bike;
+    // const div = document.createElement('div');
+    // div.appendChild(this.compRef.location.nativeElement);
+
+    // this.placeInfoWindow.setContent(div);
+    // this.placeInfoWindow.open(this.map, marker);
+
+    // it's necessary for change detection within AppInfoWindowComponent
+    this.appRef.attachView(compRef.hostView);
+    compRef.onDestroy(() => {
+      this.appRef.detachView(compRef.hostView);
+      // subscription.unsubscribe();
+    });
+    const div = document.createElement('div');
+    div.appendChild(compRef.location.nativeElement);
     this.bikeInfoWindows[bike.payload.doc.id] = new google.maps.InfoWindow({
-      content: `<app-bike-info-window [bike]="bike"></app-bike-info-window>`
+      content: div
     });
 
     google.maps.event.addListener(this.bikeInfoWindows[bike.payload.doc.id], 'domready', () => {

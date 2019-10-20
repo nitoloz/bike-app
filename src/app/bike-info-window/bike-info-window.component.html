@@ -1,9 +1,24 @@
 <div class="mt-2 text-left">
   <h5>Bike {{bikeData.name}}</h5>
-  {{bikeWindowText}}
+  <ng-container *ngIf="bikeData.rented; else notRentedBike">
+    <ng-container *ngIf="bike.payload.doc.id !== userService.getRentedBikeId(); else ownedBike">
+      <p>Sorry, this bike is already rented</p>
+    </ng-container>
+  </ng-container>
   <button class="btn btn-primary"
           [disabled]="bikeData.rented && userService.getRentedBikeId() !== bike.payload.doc.id" style="float:right;"
           id="${bike.payload.doc.id}">
     {{bikeData.rented ? 'Return Bike' : 'Rent Bike'}}
   </button>
 </div>
+
+<ng-template #notRentedBike>
+  <p>This bike is for rent</p>
+  <p>1. Click on "Rent Bicycle"</p>
+  <p>2. Bicycle lock will unlock automatically</p>
+  <p>3. Adjust saddle height</p>
+</ng-template>
+
+<ng-template #ownedBike>
+  <p>Hey! This is your bike!</p>
+</ng-template>
