@@ -1,4 +1,4 @@
-# BikeApp
+# bike-app
 Web application that allows user to find a bike on a map and rent it
 ![GitHub Logo](/docs/screenshot-1.PNG)
 
