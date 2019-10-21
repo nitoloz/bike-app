@@ -2,9 +2,38 @@
 Web application that allows user to find a bike on a map and rent it
 ![GitHub Logo](/docs/screenshot-1.PNG)
 
-## Technical description
+## Task
+Your goal is to create a simple bike sharing service with a frontend web application.
+### Frontend: 
+* Display a map of bicycles that are available for rent. Already rented bikes are grayed out. 
+* Clicking on an icon will open a popup displaying bicycle name and status. 
+* Clicking the "Rent bike" button will mark the bike as unavailable in the system. If the user opens the dialog again, he will be able to click on a "Return bike" button to make it available for rent again. 
+
+### Server side: 
+The backend should provide API endpoints to retrieve and manage bicycle renting. 
+* Differentiate between users using sessions 
+* Create an endpoint to retrieve all bicycles and their necessary information for the frontend application. 
+* Create an endpoint to rent a bicycle. A user who currently rents a bike should not be able to rent a second bicycle at the same time. 
+* Create an endpoint to return a bicycle. A user shouldn't be able to return a bicycle that he hasn't rented. 
+* Sample data: 
+
+| id  | name | latitude | longitude | rented |
+| - | - | - | - | - |
+| 0 | "Henry"  | 50.119504 | 8.638137 | false |
+| 1 | "Hans"  | 50.119229 | 8.640020 | false |
+| 2 | "Thomas"  | 50.120452 | 8.650507 | false |
+
+### Further information: 
+* Choose your favorite language, frameworks and tools for the frontend and backend application. 
+* It is up to you to use a database for storage. 
+* Use version control. 
+* There should be no references to COBI.Bike in the code. 
+
+Upload your final code to Github and make it available to COBI.Bike for us to check out! 
+
+## Solution
 ### Frontend
-Web application is based on Angular version 7.0.0, developed with Typescript and built by webpack-based [Angular CLI](https://github.com/angular/angular-cli).
+Web application is based on Angular version 8.0.0, developed with Typescript and built by webpack-based [Angular CLI](https://github.com/angular/angular-cli).
 
 Map is integrated using the [Google Maps Platform](https://cloud.google.com/maps-platform/). Every bike is represented on a map with either a blue (in case it's available) or greyed (in case it's rented) bike image that is based on [Markers](https://developers.google.com/maps/documentation/javascript/markers).
 
@@ -40,9 +69,9 @@ Users collection reprents all bikes users, where every object stores name (googl
 ## Development server
 ### Prerequisites
 * Install nodejs and npm
-* Goto `\BikeApp` folder and run `npm i`
+* Goto project root folder and run `npm i`
 * Prepare google account credentials
 
 ### Running application
-* Goto `\BikeApp` folder and run `ng serve` for a dev server. 
-* Navigate to `http://localhost:4200/`.
+* Goto project root folder and run `npm run start` to start a dev server. 
+* Open `http://localhost:4200/` in browser.
