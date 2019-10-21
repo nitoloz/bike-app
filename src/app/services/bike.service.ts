@@ -38,20 +38,6 @@ export class BikeService {
     if (this.bikeInfoWindows[bike.payload.doc.id]) {
       this.bikeInfoWindows[bike.payload.doc.id] = null;
     }
-    //
-    // const bikeWindowText = bikeData.rented
-    //   ? bike.payload.doc.id !== this.userService.getRentedBikeId()
-    //     ? `<p>Sorry, this bike is already rented</p>`
-    //     : `<p>Hey! This is your bike!</p>`
-    //   : this.getAvailableBikeInfoText();
-    //
-    // const buttonElement = bikeData.rented && this.userService.getRentedBikeId() !== bike.payload.doc.id
-    //   ? `<button class="btn btn-primary" disabled style="float:right;" id="${bike.payload.doc.id}">
-    //     ${bikeData.rented ? 'Return Bike' : 'Rent Bike'}
-    //     </button>`
-    //   : `<button class="btn btn-primary" style="float:right;" id="${bike.payload.doc.id}">
-    //     ${bikeData.rented ? 'Return Bike' : 'Rent Bike'}
-    //     </button>`;
 
     // if(this.compRef) this.compRef.destroy();
 
