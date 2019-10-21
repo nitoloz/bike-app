@@ -32,6 +32,20 @@ export class BikeService {
     });
   }
 
+  rentBike(bike: DocumentChangeAction<Bike>) {
+    if (!this.userService.getRentedBikeId()) {
+      this.userService.assignBikeToUser(bike);
+      this.bikesCollection.doc(bike.payload.doc.id).update({rented: true});
+    }
+  }
+
+  returnBike(bike: DocumentChangeAction<Bike>) {
+    if (this.userService.getRentedBikeId() === bike.payload.doc.id) {
+      this.userService.unassignBikeFromUser();
+      this.bikesCollection.doc(bike.payload.doc.id).update({rented: false});
+    }
+  }
+
   private appendInfoWindow(bike: DocumentChangeAction<Bike>) {
     // const bikeData = bike.payload.doc.data();
 
@@ -67,11 +81,11 @@ export class BikeService {
 
     google.maps.event.addListener(this.bikeInfoWindows[bike.payload.doc.id], 'domready', () => {
       document.getElementById(bike.payload.doc.id).addEventListener('click', () => {
-        if (bike.payload.doc.data().rented) {
-          this.returnBike(bike);
-        } else {
-          this.rentBike(bike);
-        }
+        // if (bike.payload.doc.data().rented) {
+        //   this.returnBike(bike);
+        // } else {
+        //   this.rentBike(bike);
+        // }
         this.bikeInfoWindows[bike.payload.doc.id].close();
       });
     });
@@ -94,20 +108,6 @@ export class BikeService {
       this.bikeMarkers[bike.payload.doc.id].addListener('click', () => {
         this.bikeInfoWindows[bike.payload.doc.id].open(map, this.bikeMarkers[bike.payload.doc.id]);
       });
-    }
-  }
-
-  private rentBike(bike: DocumentChangeAction<Bike>) {
-    if (!this.userService.getRentedBikeId()) {
-      this.userService.assignBikeToUser(bike);
-      this.bikesCollection.doc(bike.payload.doc.id).update({rented: true});
-    }
-  }
-
-  private returnBike(bike: DocumentChangeAction<Bike>) {
-    if (this.userService.getRentedBikeId() === bike.payload.doc.id) {
-      this.userService.unassignBikeFromUser();
-      this.bikesCollection.doc(bike.payload.doc.id).update({rented: false});
     }
   }
 

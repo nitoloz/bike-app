@@ -6,6 +6,7 @@
     </ng-container>
   </ng-container>
   <button class="btn btn-primary"
+          (click)="rentOrReturn()"
           [disabled]="bikeData.rented && userService.getRentedBikeId() !== bike.payload.doc.id" style="float:right;"
           id="${bike.payload.doc.id}">
     {{bikeData.rented ? 'Return Bike' : 'Rent Bike'}}
