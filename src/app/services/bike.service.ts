@@ -1,6 +1,7 @@
 /// <reference types="@types/googlemaps" />
-import {Injectable} from '@angular/core';
+import {ApplicationRef, ComponentFactoryResolver, ComponentRef, Injectable, Injector} from '@angular/core';
 import {AngularFirestore, AngularFirestoreCollection, DocumentChangeAction} from '@angular/fire/firestore';
+import {BikeInfoWindowComponent} from '../bike-info-window/bike-info-window.component';
 import {Bike} from '../interfaces/bike';
 import {UserService} from './user.service';
 
@@ -12,60 +13,67 @@ const rentedBikeIcon = 'bike_grey.png';
 })
 export class BikeService {
   bikeMarkers = {};
-  bikeInfoWindows = {};
   bikesCollection: AngularFirestoreCollection<Bike> = this.afStore.collection<any>('bikes');
+  infoWindowComponentRef: ComponentRef<BikeInfoWindowComponent>;
+  bikeInfoWindow: google.maps.InfoWindow;
 
   constructor(private afStore: AngularFirestore,
-              private userService: UserService) {
+              private userService: UserService,
+              private injector: Injector,
+              private resolver: ComponentFactoryResolver,
+              private appRef: ApplicationRef) {
   }
 
   displayBikes(map: google.maps.Map) {
+    this.bikeInfoWindow = new google.maps.InfoWindow();
+    this.bikeInfoWindow.addListener('closeclick', () => {
+      this.infoWindowComponentRef.destroy();
+    });
+
     this.bikesCollection.snapshotChanges().subscribe((bikes: DocumentChangeAction<Bike>[]) => {
       bikes.forEach(bike => {
-        this.appendInfoWindow(bike);
         this.attachBikeMarkerToMap(map, bike);
       });
     });
   }
 
-  private appendInfoWindow(bike: DocumentChangeAction<Bike>) {
-    const bikeData = bike.payload.doc.data();
+  rentBike(bike: DocumentChangeAction<Bike>) {
+    if (!this.userService.getRentedBikeId()) {
+      this.userService.assignBikeToUser(bike);
+      this.bikesCollection.doc(bike.payload.doc.id).update({rented: true});
+    }
+  }
 
-    if (this.bikeInfoWindows[bike.payload.doc.id]) {
-      this.bikeInfoWindows[bike.payload.doc.id] = null;
+  returnBike(bike: DocumentChangeAction<Bike>) {
+    if (this.userService.getRentedBikeId() === bike.payload.doc.id) {
+      this.userService.unassignBikeFromUser();
+      this.bikesCollection.doc(bike.payload.doc.id).update({rented: false});
+    }
+  }
+
+  private showInfoWindow(bike: DocumentChangeAction<Bike>, marker: google.maps.Marker, map: any) {
+
+    if (this.infoWindowComponentRef) {
+      this.infoWindowComponentRef.destroy();
     }
 
-    const bikeWindowText = bikeData.rented
-      ? bike.payload.doc.id !== this.userService.getRentedBikeId()
-        ? `<p>Sorry, this bike is already rented</p>`
-        : `<p>Hey! This is your bike!</p>`
-      : this.getAvailableBikeInfoText();
+    const compFactory = this.resolver.resolveComponentFactory(BikeInfoWindowComponent);
+    this.infoWindowComponentRef = compFactory.create(this.injector);
 
-    const buttonElement = bikeData.rented && this.userService.getRentedBikeId() !== bike.payload.doc.id
-      ? `<button class="btn btn-primary" disabled style="float:right;" id="${bike.payload.doc.id}">
-        ${bikeData.rented ? 'Return Bike' : 'Rent Bike'}
-        </button>`
-      : `<button class="btn btn-primary" style="float:right;" id="${bike.payload.doc.id}">
-        ${bikeData.rented ? 'Return Bike' : 'Rent Bike'}
-        </button>`;
+    this.infoWindowComponentRef.instance.bike = bike;
+    const div = document.createElement('div');
+    div.appendChild(this.infoWindowComponentRef.location.nativeElement);
 
-    this.bikeInfoWindows[bike.payload.doc.id] = new google.maps.InfoWindow({
-      content: `<div class="mt-2 text-left">
-                    <h5>Bike ${bikeData.name}</h5>
-                    ${bikeWindowText}
-                    ${buttonElement}
-                </div>`
+    this.bikeInfoWindow.setContent(div);
+    this.bikeInfoWindow.open(map, marker);
+
+    this.appRef.attachView(this.infoWindowComponentRef.hostView);
+    const subscription = this.infoWindowComponentRef.instance.closeWindow.subscribe(x => {
+      this.bikeInfoWindow.close();
     });
-
-    google.maps.event.addListener(this.bikeInfoWindows[bike.payload.doc.id], 'domready', () => {
-      document.getElementById(bike.payload.doc.id).addEventListener('click', () => {
-        if (bike.payload.doc.data().rented) {
-          this.returnBike(bike);
-        } else {
-          this.rentBike(bike);
-        }
-        this.bikeInfoWindows[bike.payload.doc.id].close();
-      });
+    this.infoWindowComponentRef.onDestroy(() => {
+      this.appRef.detachView(this.infoWindowComponentRef.hostView);
+      subscription.unsubscribe();
     });
   }
 
@@ -76,6 +84,7 @@ export class BikeService {
     if (this.bikeMarkers[bike.payload.doc.id]) {
       this.bikeMarkers[bike.payload.doc.id].setPosition(bikeLocation);
       this.bikeMarkers[bike.payload.doc.id].setIcon(this.getBikeIcon(bikeData.rented));
+      this.bikeMarkers[bike.payload.doc.id].bikeDocument = bike;
     } else {
       this.bikeMarkers[bike.payload.doc.id] = new google.maps.Marker({
         position: bikeLocation,
@@ -83,23 +92,11 @@ export class BikeService {
         map,
         icon: this.getBikeIcon(bikeData.rented)
       });
+      this.bikeMarkers[bike.payload.doc.id].bikeDocument = bike;
+
       this.bikeMarkers[bike.payload.doc.id].addListener('click', () => {
-        this.bikeInfoWindows[bike.payload.doc.id].open(map, this.bikeMarkers[bike.payload.doc.id]);
+        this.showInfoWindow(this.bikeMarkers[bike.payload.doc.id].bikeDocument, this.bikeMarkers[bike.payload.doc.id], map);
       });
-    }
-  }
-
-  private rentBike(bike: DocumentChangeAction<Bike>) {
-    if (!this.userService.getRentedBikeId()) {
-      this.userService.assignBikeToUser(bike);
-      this.bikesCollection.doc(bike.payload.doc.id).update({rented: true});
-    }
-  }
-
-  private returnBike(bike: DocumentChangeAction<Bike>) {
-    if (this.userService.getRentedBikeId() === bike.payload.doc.id) {
-      this.userService.unassignBikeFromUser();
-      this.bikesCollection.doc(bike.payload.doc.id).update({rented: false});
     }
   }
 
@@ -110,10 +107,4 @@ export class BikeService {
     };
   }
 
-  private getAvailableBikeInfoText() {
-    return `<p>This bike is for rent</p>
-          <p>1. Click on "Rent Bicycle"</p>
-          <p>2. Bicycle lock will unlock automatically</p>
-          <p>3. Adjust saddle height</p>`;
-  }
 }
