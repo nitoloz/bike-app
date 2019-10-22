@@ -1,9 +1,9 @@
 /// <reference types="@types/googlemaps" />
-import {ApplicationRef, ComponentFactoryResolver, Injectable, Injector} from '@angular/core';
+import {ApplicationRef, ComponentFactoryResolver, ComponentRef, Injectable, Injector} from '@angular/core';
 import {AngularFirestore, AngularFirestoreCollection, DocumentChangeAction} from '@angular/fire/firestore';
+import {BikeInfoWindowComponent} from '../bike-info-window/bike-info-window.component';
 import {Bike} from '../interfaces/bike';
 import {UserService} from './user.service';
-import {BikeInfoWindowComponent} from '../bike-info-window/bike-info-window.component';
 
 const availableBikeIcon = 'bike_blue.png';
 const rentedBikeIcon = 'bike_grey.png';
@@ -13,8 +13,9 @@ const rentedBikeIcon = 'bike_grey.png';
 })
 export class BikeService {
   bikeMarkers = {};
-  bikeInfoWindows = {};
   bikesCollection: AngularFirestoreCollection<Bike> = this.afStore.collection<any>('bikes');
+  infoWindowComponentRef: ComponentRef<BikeInfoWindowComponent>;
+  bikeInfoWindow: google.maps.InfoWindow;
 
   constructor(private afStore: AngularFirestore,
               private userService: UserService,
@@ -24,9 +25,13 @@ export class BikeService {
   }
 
   displayBikes(map: google.maps.Map) {
+    this.bikeInfoWindow = new google.maps.InfoWindow();
+    this.bikeInfoWindow.addListener('closeclick', () => {
+      this.infoWindowComponentRef.destroy();
+    });
+
     this.bikesCollection.snapshotChanges().subscribe((bikes: DocumentChangeAction<Bike>[]) => {
       bikes.forEach(bike => {
-        this.appendInfoWindow(bike);
         this.attachBikeMarkerToMap(map, bike);
       });
     });
@@ -46,48 +51,29 @@ export class BikeService {
     }
   }
 
-  private appendInfoWindow(bike: DocumentChangeAction<Bike>) {
-    // const bikeData = bike.payload.doc.data();
+  private showInfoWindow(bike: DocumentChangeAction<Bike>, marker: google.maps.Marker, map: any) {
 
-    if (this.bikeInfoWindows[bike.payload.doc.id]) {
-      this.bikeInfoWindows[bike.payload.doc.id] = null;
+    if (this.infoWindowComponentRef) {
+      this.infoWindowComponentRef.destroy();
     }
 
-    // if(this.compRef) this.compRef.destroy();
-
-    // creation component, AppInfoWindowComponent should be declared in entryComponents
     const compFactory = this.resolver.resolveComponentFactory(BikeInfoWindowComponent);
-    const compRef = compFactory.create(this.injector);
+    this.infoWindowComponentRef = compFactory.create(this.injector);
 
-    // example of parent-child communication
-    compRef.instance.bike = bike;
-    // const div = document.createElement('div');
-    // div.appendChild(this.compRef.location.nativeElement);
-
-    // this.placeInfoWindow.setContent(div);
-    // this.placeInfoWindow.open(this.map, marker);
-
-    // it's necessary for change detection within AppInfoWindowComponent
-    this.appRef.attachView(compRef.hostView);
-    compRef.onDestroy(() => {
-      this.appRef.detachView(compRef.hostView);
-      // subscription.unsubscribe();
-    });
+    this.infoWindowComponentRef.instance.bike = bike;
     const div = document.createElement('div');
-    div.appendChild(compRef.location.nativeElement);
-    this.bikeInfoWindows[bike.payload.doc.id] = new google.maps.InfoWindow({
-      content: div
-    });
+    div.appendChild(this.infoWindowComponentRef.location.nativeElement);
 
-    google.maps.event.addListener(this.bikeInfoWindows[bike.payload.doc.id], 'domready', () => {
-      document.getElementById(bike.payload.doc.id).addEventListener('click', () => {
-        // if (bike.payload.doc.data().rented) {
-        //   this.returnBike(bike);
-        // } else {
-        //   this.rentBike(bike);
-        // }
-        this.bikeInfoWindows[bike.payload.doc.id].close();
-      });
+    this.bikeInfoWindow.setContent(div);
+    this.bikeInfoWindow.open(map, marker);
+
+    this.appRef.attachView(this.infoWindowComponentRef.hostView);
+    const subscription = this.infoWindowComponentRef.instance.closeWindow.subscribe(x => {
+      this.bikeInfoWindow.close();
+    });
+    this.infoWindowComponentRef.onDestroy(() => {
+      this.appRef.detachView(this.infoWindowComponentRef.hostView);
+      subscription.unsubscribe();
     });
   }
 
@@ -98,6 +84,7 @@ export class BikeService {
     if (this.bikeMarkers[bike.payload.doc.id]) {
       this.bikeMarkers[bike.payload.doc.id].setPosition(bikeLocation);
       this.bikeMarkers[bike.payload.doc.id].setIcon(this.getBikeIcon(bikeData.rented));
+      this.bikeMarkers[bike.payload.doc.id].bikeDocument = bike;
     } else {
       this.bikeMarkers[bike.payload.doc.id] = new google.maps.Marker({
         position: bikeLocation,
@@ -105,8 +92,10 @@ export class BikeService {
         map,
         icon: this.getBikeIcon(bikeData.rented)
       });
+      this.bikeMarkers[bike.payload.doc.id].bikeDocument = bike;
+
       this.bikeMarkers[bike.payload.doc.id].addListener('click', () => {
-        this.bikeInfoWindows[bike.payload.doc.id].open(map, this.bikeMarkers[bike.payload.doc.id]);
+        this.showInfoWindow(this.bikeMarkers[bike.payload.doc.id].bikeDocument, this.bikeMarkers[bike.payload.doc.id], map);
       });
     }
   }
