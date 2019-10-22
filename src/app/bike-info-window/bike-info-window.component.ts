@@ -1,8 +1,7 @@
-import {Component, EventEmitter, Input, OnInit} from '@angular/core';
+import {Component, EventEmitter, OnInit} from '@angular/core';
 import {DocumentChangeAction} from '@angular/fire/firestore';
 import {Bike} from '../interfaces/bike';
 import {UserService} from '../services/user.service';
-import {BikeService} from '../services/bike.service';
 
 @Component({
   selector: 'app-bike-info-window',
@@ -15,20 +14,18 @@ export class BikeInfoWindowComponent implements OnInit {
   bikeData: Bike;
   closeWindow = new EventEmitter<void>();
 
+  get isOwnedBike(): boolean {
+    return this.bike.payload.doc.id === this.userService.getRentedBikeId();
+  }
 
-  constructor(public userService: UserService, private bikeService: BikeService) {
+  constructor(public userService: UserService) {
   }
 
   ngOnInit() {
     this.bikeData = this.bike.payload.doc.data();
   }
 
-  rentOrReturn() {
-    if (this.bikeData.rented) {
-      this.bikeService.returnBike(this.bike);
-    } else {
-      this.bikeService.rentBike(this.bike);
-    }
+  submit() {
     this.closeWindow.emit();
   }
 }

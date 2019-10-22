@@ -69,6 +69,11 @@ export class BikeService {
 
     this.appRef.attachView(this.infoWindowComponentRef.hostView);
     const subscription = this.infoWindowComponentRef.instance.closeWindow.subscribe(x => {
+      if (bike.payload.doc.data().rented) {
+        this.returnBike(bike);
+      } else {
+        this.rentBike(bike);
+      }
       this.bikeInfoWindow.close();
     });
     this.infoWindowComponentRef.onDestroy(() => {
