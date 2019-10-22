@@ -1,1 +1,10 @@
-<div #gmap class="map"></div>
+<div class="map-container">
+  <h3 *ngIf="!isLoggedIn; else timeCheck">Please login to rent a bike</h3>
+  <ng-template #timeCheck>
+    <ng-container *ngIf="hasBikeRented">
+      <h3>You rent a bike "{{rentedBikeName}}" since {{bikeRentalStartTime | date:'medium'}}</h3>
+    </ng-container>
+  </ng-template>
+  <div [hidden]="!isLoggedIn" #gmap class="map"></div>
+</div>
+

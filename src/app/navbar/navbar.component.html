@@ -3,8 +3,8 @@
     <img src="assets/bike_blue.png" width="30" height="30" class="d-inline-block align-top" alt="">
     BikeApp
   </a>
-  <span class="ml-auto mr-2 mr-md-5">{{userService.isLoggedIn() ? userService.getUserDisplayName() : ''}}</span>
-  <button class="btn btn-outline-success my-2 my-sm-0" *ngIf="userService.isLoggedIn(); else loginTemplate" (click)="logout()">
+  <span class="ml-auto mr-2 mr-md-5">{{userDisplayName}}</span>
+  <button class="btn btn-outline-success my-2 my-sm-0" *ngIf="isLoggedIn; else loginTemplate" (click)="logout()">
     Logout
   </button>
   <ng-template #loginTemplate>

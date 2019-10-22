@@ -14,6 +14,14 @@ export class NavbarComponent implements OnInit {
               public userService: UserService) {
   }
 
+  get userDisplayName(): string {
+    return this.userService.isLoggedIn() ? this.userService.getUserDisplayName() : '';
+  }
+
+  get isLoggedIn(): boolean {
+    return !!this.userService.isLoggedIn();
+  }
+
   ngOnInit() {
     this.afAuth.user.subscribe(firebaseUser => {
       this.userService.setFirebaseUser(firebaseUser);

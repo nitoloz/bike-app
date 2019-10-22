@@ -51,7 +51,7 @@ export class UserService {
     return this.user && this.user.rentedBikeId;
   }
 
-  getRentedBikeStartTime() {
+  getBikeRentalStartTime() {
     return this.user && this.user.rentStartTime;
   }
 

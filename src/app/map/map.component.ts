@@ -1,5 +1,6 @@
 import {AfterContentInit, Component, OnInit, ViewChild} from '@angular/core';
 import {BikeService} from '../services/bike.service';
+import {UserService} from '../services/user.service';
 import MapOptions = google.maps.MapOptions;
 
 const initialLatitude = 50.119485;
@@ -14,7 +15,23 @@ export class MapComponent implements OnInit, AfterContentInit {
   @ViewChild('gmap', {static: true}) gmapElement: any;
   map: google.maps.Map;
 
-  constructor(public bikeService: BikeService) {
+  constructor(public bikeService: BikeService, public userService: UserService) {
+  }
+
+  get isLoggedIn(): boolean {
+    return !!this.userService.isLoggedIn();
+  }
+
+  get hasBikeRented(): boolean {
+    return !!this.userService.hasBikeRented();
+  }
+
+  get rentedBikeName(): string {
+    return this.userService.getRentedBikeName();
+  }
+
+  get bikeRentalStartTime(): number {
+    return this.userService.getBikeRentalStartTime();
   }
 
   ngOnInit() {

@@ -37,21 +37,21 @@ export class BikeService {
     });
   }
 
-  rentBike(bike: DocumentChangeAction<Bike>) {
+  private rentBike(bike: DocumentChangeAction<Bike>) {
     if (!this.userService.getRentedBikeId()) {
       this.userService.assignBikeToUser(bike);
       this.bikesCollection.doc(bike.payload.doc.id).update({rented: true});
     }
   }
 
-  returnBike(bike: DocumentChangeAction<Bike>) {
+  private returnBike(bike: DocumentChangeAction<Bike>) {
     if (this.userService.getRentedBikeId() === bike.payload.doc.id) {
       this.userService.unassignBikeFromUser();
       this.bikesCollection.doc(bike.payload.doc.id).update({rented: false});
     }
   }
 
-  private showInfoWindow(bike: DocumentChangeAction<Bike>, marker: google.maps.Marker, map: any) {
+  private showInfoWindow(bike: DocumentChangeAction<Bike>, marker: google.maps.Marker, map: google.maps.Map) {
 
     if (this.infoWindowComponentRef) {
       this.infoWindowComponentRef.destroy();
