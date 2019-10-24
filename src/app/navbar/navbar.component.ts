@@ -10,8 +10,8 @@ import {UserService} from '../services/user.service';
 })
 export class NavbarComponent implements OnInit {
 
-  constructor(public afAuth: AngularFireAuth,
-              public userService: UserService) {
+  constructor(private afAuth: AngularFireAuth,
+              private userService: UserService) {
   }
 
   get userDisplayName(): string {

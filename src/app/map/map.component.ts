@@ -1,4 +1,4 @@
-import {AfterContentInit, Component, OnInit, ViewChild} from '@angular/core';
+import {AfterContentInit, Component, ViewChild} from '@angular/core';
 import {BikeService} from '../services/bike.service';
 import {UserService} from '../services/user.service';
 import MapOptions = google.maps.MapOptions;
@@ -11,11 +11,12 @@ const initialLongitude = 8.639571;
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.scss']
 })
-export class MapComponent implements OnInit, AfterContentInit {
+export class MapComponent implements AfterContentInit {
   @ViewChild('gmap', {static: true}) gmapElement: any;
-  map: google.maps.Map;
+  private map: google.maps.Map;
 
-  constructor(public bikeService: BikeService, public userService: UserService) {
+  constructor(private bikeService: BikeService,
+              private userService: UserService) {
   }
 
   get isLoggedIn(): boolean {
@@ -32,9 +33,6 @@ export class MapComponent implements OnInit, AfterContentInit {
 
   get bikeRentalStartTime(): number {
     return this.userService.getBikeRentalStartTime();
-  }
-
-  ngOnInit() {
   }
 
   ngAfterContentInit() {

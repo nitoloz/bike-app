@@ -18,7 +18,7 @@ export class BikeInfoWindowComponent implements OnInit {
     return this.bike.payload.doc.id === this.userService.getRentedBikeId();
   }
 
-  constructor(public userService: UserService) {
+  constructor(private userService: UserService) {
   }
 
   ngOnInit() {

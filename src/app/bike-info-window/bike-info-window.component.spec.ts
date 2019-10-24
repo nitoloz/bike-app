@@ -1,6 +1,7 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {async, ComponentFixture, TestBed} from '@angular/core/testing';
+import {UserService} from '../services/user.service';
 
-import { BikeInfoWindowComponent } from './bike-info-window.component';
+import {BikeInfoWindowComponent} from './bike-info-window.component';
 
 describe('BikeInfoWindowComponent', () => {
   let component: BikeInfoWindowComponent;
@@ -8,9 +9,10 @@ describe('BikeInfoWindowComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ BikeInfoWindowComponent ]
+      declarations: [BikeInfoWindowComponent],
+      providers: [UserService]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {
