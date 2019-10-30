@@ -1,12 +1,13 @@
 /// <reference types="@types/googlemaps" />
 import {ApplicationRef, ComponentFactoryResolver, ComponentRef, Injectable, Injector} from '@angular/core';
-import {AngularFirestore, AngularFirestoreCollection, DocumentChangeAction} from '@angular/fire/firestore';
+import {AngularFirestore, AngularFirestoreCollection, DocumentChangeAction, QueryDocumentSnapshot} from '@angular/fire/firestore';
 import {BikeInfoWindowComponent} from '../bike-info-window/bike-info-window.component';
 import {Bike} from '../interfaces/bike';
 import {UserService} from './user.service';
 
 const availableBikeIcon = 'bike_blue.png';
-const rentedBikeIcon = 'bike_grey.png';
+const notAvailableBikeIcon = 'bike_grey.png';
+const rentedBikeIcon = 'bike_green.png';
 
 @Injectable({
   providedIn: 'root'
@@ -88,14 +89,14 @@ export class BikeService {
 
     if (this.bikeMarkers[bike.payload.doc.id]) {
       this.bikeMarkers[bike.payload.doc.id].setPosition(bikeLocation);
-      this.bikeMarkers[bike.payload.doc.id].setIcon(this.getBikeIcon(bikeData.rented));
+      this.bikeMarkers[bike.payload.doc.id].setIcon(this.getBikeIcon(bike.payload.doc));
       this.bikeMarkers[bike.payload.doc.id].bikeDocument = bike;
     } else {
       this.bikeMarkers[bike.payload.doc.id] = new google.maps.Marker({
         position: bikeLocation,
         title: bikeData.name,
         map,
-        icon: this.getBikeIcon(bikeData.rented)
+        icon: this.getBikeIcon(bike.payload.doc)
       });
       this.bikeMarkers[bike.payload.doc.id].bikeDocument = bike;
 
@@ -105,9 +106,13 @@ export class BikeService {
     }
   }
 
-  private getBikeIcon(isBikeRented: boolean) {
+  private getBikeIcon(bikeDocument: QueryDocumentSnapshot<Bike>) {
+    const isBikeAvailable = !bikeDocument.data().rented;
+    const isBikeRentedByCurrentUser = bikeDocument.id === this.userService.getRentedBikeId();
     return {
-      url: `assets/${isBikeRented ? rentedBikeIcon : availableBikeIcon}`,
+      url: `assets/${isBikeAvailable
+        ? availableBikeIcon : isBikeRentedByCurrentUser
+          ? rentedBikeIcon : notAvailableBikeIcon}`,
       scaledSize: new google.maps.Size(40, 40)
     };
   }
