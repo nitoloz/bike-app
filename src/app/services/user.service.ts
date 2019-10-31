@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
 import {AngularFirestore, AngularFirestoreDocument, DocumentChangeAction} from '@angular/fire/firestore';
 import {User as FirebaseUser} from 'firebase';
+import {of} from 'rxjs';
 import {Bike} from '../interfaces/bike';
 import {User} from '../interfaces/user';
 
@@ -11,7 +12,7 @@ export class UserService {
 
   private user: User;
   private firebaseUser: FirebaseUser;
-  private userDocument: AngularFirestoreDocument<User>;
+  userDocument: AngularFirestoreDocument<User>;
 
   constructor(private afStore: AngularFirestore) {
   }
@@ -20,7 +21,9 @@ export class UserService {
     this.firebaseUser = firebaseUser;
     if (firebaseUser) {
       this.userDocument = this.afStore.doc<any>(`users/${this.firebaseUser.email}`);
-      this.userDocument.valueChanges().subscribe(user => this.user = user);
+      this.userDocument.valueChanges().subscribe(user => {
+        this.user = user;
+      });
 
       this.afStore.collection<any>('users').doc(firebaseUser.email)
         .set({name: firebaseUser.displayName}, {merge: true});

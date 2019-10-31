@@ -23,19 +23,33 @@ export class BikeService {
               private injector: Injector,
               private resolver: ComponentFactoryResolver,
               private appRef: ApplicationRef) {
-  }
-
-  displayBikes(map: google.maps.Map) {
     this.bikeInfoWindow = new google.maps.InfoWindow();
     this.bikeInfoWindow.addListener('closeclick', () => {
       this.infoWindowComponentRef.destroy();
     });
+  }
 
-    this.bikesCollection.snapshotChanges().subscribe((bikes: DocumentChangeAction<Bike>[]) => {
-      bikes.forEach(bike => {
-        this.attachBikeMarkerToMap(map, bike);
+  attachBikeMarkerToMap(map: google.maps.Map, bike: DocumentChangeAction<Bike>) {
+    const bikeData: Bike = bike.payload.doc.data();
+    const bikeLocation = new google.maps.LatLng(bikeData.location.latitude, bikeData.location.longitude);
+
+    if (this.bikeMarkers[bike.payload.doc.id]) {
+      this.bikeMarkers[bike.payload.doc.id].setPosition(bikeLocation);
+      this.bikeMarkers[bike.payload.doc.id].setIcon(this.getBikeIcon(bike.payload.doc));
+      this.bikeMarkers[bike.payload.doc.id].bikeDocument = bike;
+    } else {
+      this.bikeMarkers[bike.payload.doc.id] = new google.maps.Marker({
+        position: bikeLocation,
+        title: bikeData.name,
+        map,
+        icon: this.getBikeIcon(bike.payload.doc)
       });
-    });
+      this.bikeMarkers[bike.payload.doc.id].bikeDocument = bike;
+
+      this.bikeMarkers[bike.payload.doc.id].addListener('click', () => {
+        this.showInfoWindow(this.bikeMarkers[bike.payload.doc.id].bikeDocument, this.bikeMarkers[bike.payload.doc.id], map);
+      });
+    }
   }
 
   private rentBike(bike: DocumentChangeAction<Bike>) {
@@ -81,29 +95,6 @@ export class BikeService {
       this.appRef.detachView(this.infoWindowComponentRef.hostView);
       subscription.unsubscribe();
     });
-  }
-
-  private attachBikeMarkerToMap(map: google.maps.Map, bike: DocumentChangeAction<Bike>) {
-    const bikeData: Bike = bike.payload.doc.data();
-    const bikeLocation = new google.maps.LatLng(bikeData.location.latitude, bikeData.location.longitude);
-
-    if (this.bikeMarkers[bike.payload.doc.id]) {
-      this.bikeMarkers[bike.payload.doc.id].setPosition(bikeLocation);
-      this.bikeMarkers[bike.payload.doc.id].setIcon(this.getBikeIcon(bike.payload.doc));
-      this.bikeMarkers[bike.payload.doc.id].bikeDocument = bike;
-    } else {
-      this.bikeMarkers[bike.payload.doc.id] = new google.maps.Marker({
-        position: bikeLocation,
-        title: bikeData.name,
-        map,
-        icon: this.getBikeIcon(bike.payload.doc)
-      });
-      this.bikeMarkers[bike.payload.doc.id].bikeDocument = bike;
-
-      this.bikeMarkers[bike.payload.doc.id].addListener('click', () => {
-        this.showInfoWindow(this.bikeMarkers[bike.payload.doc.id].bikeDocument, this.bikeMarkers[bike.payload.doc.id], map);
-      });
-    }
   }
 
   private getBikeIcon(bikeDocument: QueryDocumentSnapshot<Bike>) {
