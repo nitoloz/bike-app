@@ -35,19 +35,24 @@ export class BikeService {
 
     if (this.bikeMarkers[bike.payload.doc.id]) {
       this.bikeMarkers[bike.payload.doc.id].setPosition(bikeLocation);
-      this.bikeMarkers[bike.payload.doc.id].setIcon(this.getBikeIcon(bike.payload.doc));
+      this.bikeMarkers[bike.payload.doc.id].setIcon(this.getBikeMarkerIcon(bike.payload.doc));
       this.bikeMarkers[bike.payload.doc.id].bikeDocument = bike;
+      this.bikeMarkers[bike.payload.doc.id].cursor = this.getBikeMarkerCursor(bike.payload.doc);
     } else {
       this.bikeMarkers[bike.payload.doc.id] = new google.maps.Marker({
         position: bikeLocation,
         title: bikeData.name,
         map,
-        icon: this.getBikeIcon(bike.payload.doc)
+        icon: this.getBikeMarkerIcon(bike.payload.doc),
+        cursor: this.getBikeMarkerCursor(bike.payload.doc)
       });
       this.bikeMarkers[bike.payload.doc.id].bikeDocument = bike;
 
       this.bikeMarkers[bike.payload.doc.id].addListener('click', () => {
-        this.showInfoWindow(this.bikeMarkers[bike.payload.doc.id].bikeDocument, this.bikeMarkers[bike.payload.doc.id], map);
+        if (this.userService.hasBikeRented() && bike.payload.doc.id === this.userService.getRentedBikeId()
+          || !this.userService.hasBikeRented() && !this.bikeMarkers[bike.payload.doc.id].bikeDocument.payload.doc.data().rented) {
+          this.showInfoWindow(this.bikeMarkers[bike.payload.doc.id].bikeDocument, this.bikeMarkers[bike.payload.doc.id], map);
+        }
       });
     }
   }
@@ -97,15 +102,22 @@ export class BikeService {
     });
   }
 
-  private getBikeIcon(bikeDocument: QueryDocumentSnapshot<Bike>) {
+  private getBikeMarkerIcon(bikeDocument: QueryDocumentSnapshot<Bike>) {
     const isBikeAvailable = !bikeDocument.data().rented;
     const isBikeRentedByCurrentUser = bikeDocument.id === this.userService.getRentedBikeId();
     return {
-      url: `assets/${isBikeAvailable
+      url: `assets/${isBikeAvailable && !this.userService.hasBikeRented()
         ? availableBikeIcon : isBikeRentedByCurrentUser
           ? rentedBikeIcon : notAvailableBikeIcon}`,
       scaledSize: new google.maps.Size(40, 40)
     };
+  }
+
+  private getBikeMarkerCursor(bikeDocument: QueryDocumentSnapshot<Bike>) {
+    const isBikeAvailable = !bikeDocument.data().rented;
+    const isBikeRentedByCurrentUser = bikeDocument.id === this.userService.getRentedBikeId();
+    return isBikeAvailable && !this.userService.hasBikeRented() || isBikeRentedByCurrentUser
+      ? 'pointer' : 'not-allowed';
   }
 
 }
