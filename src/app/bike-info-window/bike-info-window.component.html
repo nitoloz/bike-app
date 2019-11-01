@@ -1,9 +1,8 @@
 <div class="mt-2 text-left">
   <h5>Bike {{bikeData.name}}</h5>
-  <ng-container *ngIf="bikeData.rented; else notRentedBike">
-    <ng-container *ngIf="!isOwnedBike; else ownedBike">
-      <p>Sorry, this bike is already rented</p>
-    </ng-container>
+  <ng-container *ngIf="isOwnedBike; else notRentedBike">
+    <p>Hey! This is your bike!</p>
+    <button class="btn btn-link submit-button" (click)="submit()"> Return Bike</button>
   </ng-container>
 </div>
 
@@ -13,9 +12,4 @@
   <p>2. Bicycle lock will unlock automatically</p>
   <p>3. Adjust saddle height</p>
   <button class="btn btn-link submit-button" (click)="submit()"> Rent Bike</button>
-</ng-template>
-
-<ng-template #ownedBike>
-  <p>Hey! This is your bike!</p>
-  <button class="btn btn-link submit-button" (click)="submit()"> Return Bike</button>
 </ng-template>
