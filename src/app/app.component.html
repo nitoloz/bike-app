@@ -1,6 +1,6 @@
 <app-navbar></app-navbar>
-<h3 *ngIf="!isLoggedIn; else timeCheck" class="text-center">Please login to rent a bike</h3>
-<ng-template #timeCheck>
+<h3 *ngIf="!isLoggedIn; else map" class="text-center">Please login to rent a bike</h3>
+<ng-template #map>
   <app-map></app-map>
 </ng-template>
 
