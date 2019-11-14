@@ -1,5 +1,7 @@
-import { TestBed, async } from '@angular/core/testing';
-import { AppComponent } from './app.component';
+import {async, TestBed} from '@angular/core/testing';
+import {AppComponent} from './app.component';
+import {UserService} from './services/user.service';
+import {MockUserService} from './services/user.service.spec';
 
 describe('AppComponent', () => {
   beforeEach(async(() => {
@@ -7,6 +9,9 @@ describe('AppComponent', () => {
       declarations: [
         AppComponent
       ],
+      providers: [
+        {provide: UserService, useClass: MockUserService}
+      ]
     }).compileComponents();
   }));
 

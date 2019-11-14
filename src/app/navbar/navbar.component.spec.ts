@@ -3,21 +3,9 @@ import {AngularFireAuth} from '@angular/fire/auth';
 import {auth, User} from 'firebase';
 import {BehaviorSubject} from 'rxjs';
 import {UserService} from '../services/user.service';
+import {MockUserService} from '../services/user.service.spec';
 
 import {NavbarComponent} from './navbar.component';
-
-export class MockUserService {
-  setFirebaseUser(user: User) {
-  }
-
-  isLoggedIn() {
-    return false;
-  }
-
-  getUserDisplayName() {
-    return '';
-  }
-}
 
 export class MockAngularFireAuth {
   userSubject = new BehaviorSubject<User>(null);
@@ -58,11 +46,11 @@ describe('NavbarComponent', () => {
   });
 
   it('should set user to user service after login', () => {
-    const angularFireAuth: AngularFireAuth = TestBed.get(AngularFireAuth);
+    const angularFireAuth: MockAngularFireAuth = TestBed.get(AngularFireAuth);
     const userService: UserService = TestBed.get(UserService);
     spyOn(userService, 'setFirebaseUser');
-    const mockUser = {email: 'mockuser@gmail.com'};
-    (angularFireAuth as any).userSubject.next(mockUser);
+    const mockUser = {email: 'mockuser@gmail.com'} as User;
+    angularFireAuth.userSubject.next(mockUser);
     expect(userService.setFirebaseUser).toHaveBeenCalledWith(mockUser);
   });
 
