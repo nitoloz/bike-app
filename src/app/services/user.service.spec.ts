@@ -17,6 +17,10 @@ export class MockUserService {
   getUserDisplayName() {
     return '';
   }
+
+  getRentedBikeId() {
+    return '';
+  }
 }
 
 export class MockAngularFirestore {
@@ -25,6 +29,7 @@ export class MockAngularFirestore {
       doc(documentName: string) {
         return {
           set(object: any) {
+            return;
           }
         };
       }
@@ -58,6 +63,8 @@ describe('UserService', () => {
   );
 
   it('should assign bike to user', () => {
+    (service as any).firebaseUser = mockFirebaseUser;
+
     const angularFirestore: AngularFirestore = TestBed.get(AngularFirestore);
     spyOn(angularFirestore.collection('users').doc(mockFirebaseUser.email), 'set');
 
