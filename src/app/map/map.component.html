@@ -1,7 +1,10 @@
 <div class="mt-2">
-    <ng-container *ngIf="hasBikeRented">
-      <h3 class="text-center">You rent a bike "{{rentedBikeName}}" since {{bikeRentalStartTime | date:'medium'}}</h3>
-    </ng-container>
+  <ng-container *ngIf="hasBikeRented">
+    <h3 class="text-center rental-info">You rent a bike
+      <span>{{rentedBikeName}}</span> since
+      <span>{{bikeRentalStartTime | date : 'h:mm a dd.MM.yyyy'}}</span>
+    </h3>
+  </ng-container>
   <div #gmap class="map"></div>
 </div>
 
