@@ -1,6 +1,6 @@
 # Coding Challenge for [COBI.Bike](https://cobi.bike/) (November 2018)
 Web application that allows user to find a bike on a map and rent it
-![GitHub Logo](/docs/screenshot-1.PNG)
+![Bikes Map](/docs/screenshot-1.PNG)
 
 ## Task
 Your goal is to create a simple bike sharing service with a frontend web application.
